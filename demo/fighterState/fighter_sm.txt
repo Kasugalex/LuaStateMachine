@@ -1,0 +1,49 @@
+
+-- 挑战者状态机
+
+local print 	= print
+local require 	= require
+local event 	= require "event"
+
+
+local fighter_any_state 			= require "fighter_any_state"
+local fighter_idle_state 			= require "fighter_idle_state"
+local fighter_battle_tap_state 		= require "fighter_battle_tap_state"
+local fighter_battle_comb_state 	= require "fighter_battle_comb_state"
+local fighter_battle_thump_state 	= require "fighter_battle_thump_state"
+module("fighter_sm")
+
+local FighterSm = {}
+
+function FighterSm:ctor(selfType, anim)
+	self.animator = anim
+	self:AddStates()
+end
+
+function FighterSm:AddStates()
+	local fighterIdleState = fighter_idle_state(self.animator)
+	local fighterTapState = fighter_battle_tap_state(self.animator)
+	local fighterCombState = fighter_battle_comb_state(self.animator)
+	local fighterThumpState = fighter_battle_thump_state(self.animator)
+	self:AddState(fighterIdleState)
+	self:AddState(fighterTapState)
+	self:AddState(fighterCombState)
+	self:AddState(fighterThumpState)
+
+	local anyState = fighter_any_state()
+	self:SetAnyState(anyState)
+
+	self:PerformTransition()
+	
+	self.updateTransition = function(_, state)
+		local lobbyFightState = require "lobbyFightState"
+		lobbyFightState.SetStateID(state)
+		self:PerformTransition()
+	end
+	event.Register(event.UPDATE_LOBBY_FIGHT_STATE, self.updateTransition)
+end
+
+local sm_system = require "sm_system"
+local class = require "class"
+
+CFighterFsm = class(sm_system.CStateMachineSystem, nil, FighterSm)

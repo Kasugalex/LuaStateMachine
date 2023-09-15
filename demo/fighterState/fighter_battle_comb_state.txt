@@ -1,0 +1,49 @@
+
+-- 挑战者连击状态
+
+local print     = print
+local table     = table
+local pairs     = pairs
+local assert    = assert
+local require   = require
+local FSMState  = require "sm_state"
+
+local lobbyFightState = require "lobbyFightState"
+local StateID = lobbyFightState.StateID
+
+module("fighter_battle_comb_state")
+local FighterBattleCombState = {}
+function FighterBattleCombState:ctor(selfType, animator)
+    self.animator = animator
+    self.stateID = StateID.BattleCombStateID
+
+    -- 连击到连击
+    self:AddTransition(StateID.BattleCombStateID, function()
+        return lobbyFightState.GetStateID() == StateID.BattleCombStateID
+    end)
+
+    -- 连击到重击
+    self:AddTransition(StateID.BattleThumpStateID, function()
+        return lobbyFightState.GetStateID() == StateID.BattleThumpStateID
+    end)
+end
+
+function FighterBattleCombState:DoBeforeEntering()
+    print("lobbyFightState---挑战者进入comb连击状态")
+    lobbyFightState.SetStateID(StateID.BattleCombStateID)
+    self.animator:SetInteger("stateID", StateID.BattleCombStateID)
+    self.animator:SetTrigger("actionTrigger")
+end
+
+function FighterBattleCombState:DoBeforeLeaving()
+    print("lobbyFightState---挑战者离开comb连击状态")
+end
+
+function FighterBattleCombState:Dispose()
+
+end
+
+local class = require "class"
+local object = require "object"
+local CFighterBattleCombState = class(FSMState, nil, FighterBattleCombState)
+return CFighterBattleCombState

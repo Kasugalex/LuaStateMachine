@@ -1,0 +1,61 @@
+
+-- 挑战者idle状态
+
+local print     = print
+local table     = table
+local pairs     = pairs
+local assert    = assert
+local require   = require
+local FSMState  = require "sm_state"
+
+local lobbyFightState = require "lobbyFightState"
+local StateID = lobbyFightState.StateID
+
+module("fighter_idle_state")
+local FighterIdleState = {}
+function FighterIdleState:ctor(selfType, animator)
+    self.animator = animator
+    self.stateID = StateID.IdleStateID
+
+    --自身转到自身
+	self:AddTransition(StateID.IdleStateID, function ()
+		return lobbyFightState.GetStateID() == StateID.IdleStateID
+	end)
+
+    -- idle到轻击
+    self:AddTransition(StateID.BattleTapStateID, function()
+        return lobbyFightState.GetStateID() == StateID.BattleTapStateID
+    end)
+
+    -- idle到连击
+    self:AddTransition(StateID.BattleCombStateID, function()
+        return lobbyFightState.GetStateID() == StateID.BattleCombStateID
+    end)
+
+    -- idle到重击
+    self:AddTransition(StateID.BattleThumpStateID, function()
+        return lobbyFightState.GetStateID() == StateID.BattleThumpStateID
+    end)
+end
+
+function FighterIdleState:DoBeforeEntering()
+    print("lobbyFightState---挑战者进入idle状态")
+    lobbyFightState.SetStateID(StateID.IdleStateID)
+    if self.animator then
+        self.animator:SetInteger("stateID", StateID.IdleStateID)
+        self.animator:SetTrigger("actionTrigger")
+    end
+end
+
+function FighterIdleState:DoBeforeLeaving()
+    print("lobbyFightState---挑战者离开idle状态")
+end
+
+function FighterIdleState:Dispose()
+
+end
+
+local class = require "class"
+local object = require "object"
+local CFighterIdleState = class(FSMState, nil, FighterIdleState)
+return CFighterIdleState

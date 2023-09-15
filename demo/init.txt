@@ -1,0 +1,26 @@
+
+local typeof    = typeof
+local require   = require
+
+local AnimatorType  = typeof(CS.UnityEngine.Animator)
+
+---@see 加载两个基础人物
+function LoadBaseRole(imgNode, callback)
+
+    local fighterRootPath = "xxxx.prefab"
+    -- YourLoadManager 项目内的资源加载管理器
+    YourLoadManager:LoadResource(fighterRootPath, function (fighterRoot)
+        if fighterRoot then
+            fighterTrans = fighterRoot.transform
+            fighterTrans:SetParent(lobbyFightRoot.transform:Find("fighterRoot"))
+            fighterTrans.localPosition = {x = 0, y = 0, z = 0}
+            fighterTrans.localScale = { x = 1, y = 1, z = 1}
+            fighterAnimator = fighterRoot:GetComponent(AnimatorType)
+
+            -- 创建挑战者状态机
+            local fighter_sm = require "fighter_sm"
+            fighterFSM = fighter_sm.CFighterFsm(fighterAnimator)
+        end
+    end)
+    
+end

@@ -1,0 +1,42 @@
+
+-- 挑战者idle状态
+
+local print     = print
+local table     = table
+local pairs     = pairs
+local assert    = assert
+local require   = require
+local FSMState  = require "sm_state"
+
+local lobbyFightState = require "lobbyFightState"
+local StateID = lobbyFightState.StateID
+
+module("fighter_any_state")
+local FighterAnyState = {}
+function FighterAnyState:ctor(selfType)
+    self.stateID = StateID.AnyState
+
+    --转到idle
+	self:AddTransition(StateID.IdleStateID, function ()
+		return lobbyFightState.GetStateID() == StateID.IdleStateID
+	end)
+
+end
+
+function FighterAnyState:DoBeforeEntering()
+    print("lobbyFightState---挑战者进入any状态,即将转到idle状态")
+    lobbyFightState.SetStateID(StateID.IdleStateID)
+end
+
+function FighterAnyState:DoBeforeLeaving()
+    print("lobbyFightState---挑战者离开any状态")
+end
+
+function FighterAnyState:Dispose()
+
+end
+
+local class = require "class"
+local object = require "object"
+local CFighterAnyState = class(FSMState, nil, FighterAnyState)
+return CFighterAnyState

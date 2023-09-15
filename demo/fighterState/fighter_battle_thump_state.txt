@@ -1,0 +1,46 @@
+
+-- 挑战者重击状态
+
+local print     = print
+local table     = table
+local pairs     = pairs
+local assert    = assert
+local require   = require
+local FSMState  = require "sm_state"
+
+local lobbyFightState = require "lobbyFightState"
+local StateID = lobbyFightState.StateID
+
+module("fighter_battle_thump_state")
+local FighterBattleThumpState = {}
+function FighterBattleThumpState:ctor(selfType, animator)
+    self.animator = animator
+    self.stateID = StateID.BattleThumpStateID
+
+    -- 重击到重击
+    self:AddTransition(StateID.BattleThumpStateID, function()
+        return lobbyFightState.GetStateID() == StateID.BattleThumpStateID
+    end)
+end
+
+function FighterBattleThumpState:DoBeforeEntering()
+    print("lobbyFightState---挑战者进入thump重击状态")
+    lobbyFightState.SetStateID(StateID.BattleThumpStateID)
+    if self.animator:GetInteger("stateID") ~= StateID.BattleThumpStateID then
+        self.animator:SetInteger("stateID", StateID.BattleThumpStateID)
+        self.animator:SetTrigger("actionTrigger")
+    end
+end
+
+function FighterBattleThumpState:DoBeforeLeaving()
+    print("lobbyFightState---挑战者离开thump重击状态")
+end
+
+function FighterBattleThumpState:Dispose()
+
+end
+
+local class = require "class"
+local object = require "object"
+local CFighterBattleThumpState = class(FSMState, nil, FighterBattleThumpState)
+return CFighterBattleThumpState

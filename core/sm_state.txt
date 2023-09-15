@@ -1,0 +1,79 @@
+local tostring = tostring
+local pairs = pairs
+local table = table
+local require = require
+local print = print
+local error = error
+
+module("sm_state")
+
+
+local MachineState = {}
+
+function MachineState:ctor(selfType)
+	self.map = {}--key->Transition（转换条件）  value->StateID（转换到的状态
+	self.stateID = nil --自身状态ID
+end
+
+function MachineState:AddTransition(id, transFunc)
+	if transFunc == nil then
+		error("FSMState ERROR: NullTransition is not allowed for a real transition")
+		return
+	end
+	
+	if id == nil then
+		error("FSMState ERROR: NullStateID is not allowed for a real ID")
+		return
+	end
+	for k in pairs(self.map) do
+		if k == transFunc then
+			error("FSMState ERROR: State " .. tostring(id) .. " already has transition " .. 
+					tostring(transFunc) .. "Impossible to assign to another state")
+			return
+		end
+	end
+	self.map[transFunc] = id
+end
+
+function MachineState:DeleteTransition(transFunc)
+	if transFunc == nil then
+		error("FSMState ERROR: NullTransition is not allowed for a real transition")
+		return
+	end
+	for k in pairs(self.map) do
+		if k == transFunc then
+			self.map[transFunc] = nil
+			break
+		end
+	end
+	error("FSMState ERROR: Transition " .. tostring(transFunc) .. " passed to " .. tostring(self.stateID) ..
+                       " was not on the state's transition list")
+end
+
+function MachineState:GetOutputState(...)
+	for func in pairs(self.map) do
+		if func(...) then
+			return self.map[func]
+		end
+	end
+	return nil
+end
+
+--实际的状态需要重写这个方法
+function MachineState:DoBeforeEntering()
+	
+end
+
+--实际的状态需要重写这个方法
+function MachineState:DoBeforeLeaving()
+	
+end
+
+function MachineState:Dispose()
+	self.map = {}
+end
+
+local class = require "class"
+local object = require "object"
+
+return class(object, nil, MachineState)

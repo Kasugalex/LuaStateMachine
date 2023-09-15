@@ -1,0 +1,32 @@
+
+local event = require "event"
+
+module("lobbyFightState")
+
+-- 跟Animator一致
+StateID = 
+{
+	EmptyState = -1,		-- 空状态
+	AnyState = 0,			-- anystate
+	IdleStateID = 1,        -- idle
+	BattleTapStateID = 2,   -- 轻击
+	BattleCombStateID = 3,  -- 连击
+    BattleThumpStateID = 4, -- 重击
+}
+
+local curStateID = StateID.IdleStateID
+
+function GetStateID()
+	return curStateID
+end
+
+function SetStateID(stateID)
+	curStateID = stateID
+end
+
+--@see 清除数据
+function ClearData()
+    curStateID = StateID.IdleStateID
+end
+event.Register(event.SCENE_DESTROY, ClearData)
+event.Register(event.ACCOUNT_CHANGE_WORLD_RSP, ClearData)

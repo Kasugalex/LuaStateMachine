@@ -1,0 +1,126 @@
+local table = table
+local pairs = pairs
+local tostring = tostring
+local require = require
+local print = print
+local error = error
+
+module("sm_system")
+
+local StateMachineSystem = {}
+
+function StateMachineSystem:ctor(selfType)
+	self.states = {}
+	self.anyState = nil
+	self.currentStateID = nil
+	self.currentState = nil
+end
+
+function StateMachineSystem:AddState(fsmState)
+	if fsmState == nil then
+		error("FSM ERROR: Null reference is not allowed")
+	end
+	if 0 == #self.states then
+		table.insert(self.states, fsmState)
+		self.currentState = fsmState
+		self.currentStateID = fsmState.stateID
+		return
+	end
+	for k in pairs(self.states) do
+		if fsmState.stateID == self.states[k].stateID then
+			error("FSM ERROR: Impossible to add state " .. tostring(fsmState.stateID) ..
+                               " because state has already been added")
+			return
+		end
+	end
+	table.insert(self.states, fsmState)
+end
+
+function StateMachineSystem:SetAnyState(fsmState)
+	if fsmState == nil then
+		error("FSM ERROR: Null reference is not allowed")
+	end
+	self.anyState = fsmState
+end
+
+function StateMachineSystem:SetDefaultState(id)
+	local isInStates = false
+	local state = nil
+	for _, v in pairs(self.states) do
+		if v.stateID == id then
+			isInStates = true
+			state = v
+		end
+	end
+	
+	if isInStates == true then
+		self.currentState = state
+		self.currentStateID = state.stateID
+	else
+		error("FSM ERROR:  " .. tostring(id) ..
+                       ". It was not on the list of states")
+	end
+end
+
+function StateMachineSystem:DeleteState(id)
+	if id == nil then
+		error("FSM ERROR: NullStateID is not allowed for a real state")
+		return
+	end
+	local canRemove = false
+	local key = nil
+	for k in pairs(self.states) do
+		if id == self.states[k].stateID then
+			key = k
+			canRemove = true
+		end
+	end
+	if canRemove == true then
+		table.remove(self.states, key)
+		return
+	end
+	error("FSM ERROR: Impossible to delete state " .. tostring(id) ..
+                       ". It was not on the list of states")
+end
+
+function StateMachineSystem:PerformTransition(...)
+	local id = nil
+	if self.anyState then
+		id = self.anyState:GetOutputState(...)
+	end
+	-- 防止状态重入
+	if id == self.currentState.stateID then
+		id = nil
+	end
+	if id == nil then
+		id = self.currentState:GetOutputState(...)
+	end
+	
+	if id == nil then
+		--error("FSM ERROR: State " .. tostring(self.currentStateID) .. " does not have a target state " ..
+        --                   " for transition ", ...)
+		return
+	end
+	
+	for k in pairs(self.states) do
+		if id == self.states[k].stateID then
+			self.currentState:DoBeforeLeaving()
+			self.currentState = self.states[k]
+			self.currentState:DoBeforeEntering()
+			break
+		end
+	end
+end
+
+function StateMachineSystem:Dispose()
+	for k, v in pairs(self.states) do
+		v:Dispose()
+	end
+	self.states = {}
+	--print("FSMSystem Disposed!")
+end
+
+local class = require "class"
+local object = require "object"
+
+CStateMachineSystem = class(object, nil, StateMachineSystem)

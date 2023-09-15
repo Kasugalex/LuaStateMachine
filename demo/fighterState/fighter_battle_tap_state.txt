@@ -1,0 +1,54 @@
+
+-- 挑战者轻击状态
+
+local print     = print
+local table     = table
+local pairs     = pairs
+local assert    = assert
+local require   = require
+local FSMState  = require "sm_state"
+
+local lobbyFightState = require "lobbyFightState"
+local StateID = lobbyFightState.StateID
+
+module("fighter_battle_tap_state")
+local FighterBattleTapState = {}
+function FighterBattleTapState:ctor(selfType, animator)
+    self.animator = animator
+    self.stateID = StateID.BattleTapStateID
+
+    -- 轻击到轻击
+    self:AddTransition(StateID.BattleTapStateID, function()
+        return lobbyFightState.GetStateID() == StateID.BattleTapStateID
+    end)
+
+    -- 轻击到连击
+    self:AddTransition(StateID.BattleCombStateID, function()
+        return lobbyFightState.GetStateID() == StateID.BattleCombStateID
+    end)
+
+    -- 轻击到重击
+    self:AddTransition(StateID.BattleThumpStateID, function()
+        return lobbyFightState.GetStateID() == StateID.BattleThumpStateID
+    end)
+end
+
+function FighterBattleTapState:DoBeforeEntering()
+    print("lobbyFightState---挑战者进入tap轻击状态")
+    lobbyFightState.SetStateID(StateID.BattleTapStateID)
+    self.animator:SetInteger("stateID", StateID.BattleTapStateID)
+    self.animator:SetTrigger("actionTrigger")
+end
+
+function FighterBattleTapState:DoBeforeLeaving()
+    print("lobbyFightState---挑战者离开tap轻击状态")
+end
+
+function FighterBattleTapState:Dispose()
+
+end
+
+local class = require "class"
+local object = require "object"
+local CFighterBattleTapState = class(FSMState, nil, FighterBattleTapState)
+return CFighterBattleTapState
